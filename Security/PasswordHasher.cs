@@ -39,7 +39,7 @@ public class PasswordHasher
             salt: salt,
             iterations: Iterations,
             hashAlgorithm: HashAlgorithmName.SHA256,
-            outputLength: KeySize);
+            outputLength: expectedHash.Length);
 
         return CryptographicOperations.FixedTimeEquals(
             actualHash,

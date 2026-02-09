@@ -1,13 +1,13 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
-using System.Text.Json;
 using FinancialApp.Backend.Models;
 using FinancialApp.Backend.Util;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace FinancialApp.Backend.Functions.Http;
 
@@ -15,9 +15,12 @@ public class CreateMovementFunction
 {
     private readonly Container _container;
     private readonly ILogger<CreateMovementFunction> _logger;
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    private static readonly JsonSerializerSettings JsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver
+        {
+            NamingStrategy = new Newtonsoft.Json.Serialization.DefaultNamingStrategy()
+        }
     };
 
     public CreateMovementFunction(
@@ -37,7 +40,7 @@ public class CreateMovementFunction
         {
             var body = await new StreamReader(req.Body).ReadToEndAsync();
 
-            movement = JsonSerializer.Deserialize<Movement>(
+            movement = JsonConvert.DeserializeObject<Movement>(
                 body,
                 JsonOptions);
         }

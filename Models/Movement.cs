@@ -1,8 +1,13 @@
-﻿namespace FinancialApp.Backend.Models;
+﻿using Newtonsoft.Json;
+
+namespace FinancialApp.Backend.Models;
 
 public class Movement
 {
+    [JsonProperty("id")]
     public string Id { get; set; } = Guid.NewGuid().ToString();
+    
+    [JsonProperty("userId")]
     public string UserId { get; set; } = string.Empty;
 
     private string _type = "expense";

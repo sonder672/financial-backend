@@ -103,7 +103,7 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
         if (req is null) return;
 
          HttpResponseData res = await JsonResponse
-            .Create(req, HttpStatusCode.Unauthorized, "Internal server error");
+            .Create(req, HttpStatusCode.InternalServerError, "Internal server error");
 
         context.GetInvocationResult().Value = res;
     }

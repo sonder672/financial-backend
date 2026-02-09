@@ -1,13 +1,16 @@
 ﻿using System.Net;
-using System.Text.Json;
 using Microsoft.Azure.Functions.Worker.Http;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace FinancialApp.Backend.Util;
 
 public static class JsonResponse
 {
-    private static readonly JsonSerializerOptions JsonOptions =
-        new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    private static readonly JsonSerializerSettings JsonSettings = new()
+    {
+        ContractResolver = new CamelCasePropertyNamesContractResolver()
+    };
 
     public static async Task<HttpResponseData> Create(
         HttpRequestData req,
@@ -26,7 +29,7 @@ public static class JsonResponse
                 ? new { response = str }
                 : body;
 
-            var json = JsonSerializer.Serialize(bodyToSerialize, JsonOptions);
+            var json = JsonConvert.SerializeObject(bodyToSerialize, JsonSettings);
             await response.WriteStringAsync(json);
         }
 

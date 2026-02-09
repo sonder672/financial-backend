@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Text.Json;
 using FinancialApp.Backend.Security;
 using FinancialApp.Backend.Util;
 using Microsoft.Azure.Cosmos;
@@ -8,6 +7,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace FinancialApp.Backend.Functions.Http;
 
@@ -17,9 +17,13 @@ public class ValidateUserFunction
     private readonly ILogger<ValidateUserFunction> _logger;
     private readonly JwtHelper _jwt;
 
-    private static readonly JsonSerializerOptions JsonOptions =
-        new() { PropertyNameCaseInsensitive = true };
-
+    private static readonly JsonSerializerSettings JsonOptions = new()
+    {
+        ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver
+        {
+            NamingStrategy = new Newtonsoft.Json.Serialization.DefaultNamingStrategy()
+        }
+    };
     public ValidateUserFunction(
         CosmosClient client,
         ILogger<ValidateUserFunction> logger,
@@ -39,7 +43,7 @@ public class ValidateUserFunction
         try
         {
             var body = await new StreamReader(req.Body).ReadToEndAsync();
-            login = JsonSerializer.Deserialize<LoginRequest>(body, JsonOptions);
+            login = JsonConvert.DeserializeObject<LoginRequest>(body, JsonOptions);
         }
         catch (JsonException exception)
         {
