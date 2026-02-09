@@ -22,10 +22,8 @@ public class PasswordHasher
             outputLength: KeySize
         );
 
-        return (
-            Convert.ToBase64String(hash),
-            Convert.ToBase64String(salt)
-        );
+        return (Convert.ToBase64String(hash),
+            Convert.ToBase64String(salt));
     }
 
     public static bool Verify(
@@ -41,11 +39,10 @@ public class PasswordHasher
             salt: salt,
             iterations: Iterations,
             hashAlgorithm: HashAlgorithmName.SHA256,
-            outputLength: expectedHash.Length
-        );
+            outputLength: KeySize);
 
         return CryptographicOperations.FixedTimeEquals(
             actualHash,
-            expectedHash
-        );
-    }}
+            expectedHash);
+    }
+}

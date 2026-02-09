@@ -2,6 +2,7 @@
 using System.Net;
 using System.Security.Claims;
 using FinancialApp.Backend.Models;
+using FinancialApp.Backend.Util;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -39,8 +40,7 @@ public class GetMovementsFunction
             results.AddRange(response);
         }
 
-        var http = req.CreateResponse(HttpStatusCode.OK);
-        await http.WriteAsJsonAsync(results);
-        return http;
+        return await JsonResponse
+            .Create(req, HttpStatusCode.OK, results);
     }
 }

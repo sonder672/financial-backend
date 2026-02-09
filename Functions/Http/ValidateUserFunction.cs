@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json;
 using FinancialApp.Backend.Security;
+using FinancialApp.Backend.Util;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -42,20 +43,18 @@ public class ValidateUserFunction
         }
         catch (JsonException exception)
         {
-            _logger.LogError(exception, $"Ocurrió un error deserializando la entrada: {exception.Message}");
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Invalid JSON");
+            _logger.LogError(exception, "Datos del Movimiento erróneos. Probablemente se envió en formato incorrecto o faltan parámetros.");
 
-            return bad;
+            return await JsonResponse
+                .Create(req, HttpStatusCode.BadRequest, "Invalid JSON body");
         }
 
         if (login is null ||
             string.IsNullOrWhiteSpace(login.Email) ||
             string.IsNullOrWhiteSpace(login.Password))
         {
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Email and password are required");
-            return bad;
+            return await JsonResponse
+                .Create(req, HttpStatusCode.BadRequest, "Email and password are required");
         }
 
         Models.User? user;
@@ -70,9 +69,8 @@ public class ValidateUserFunction
         {
             _logger.LogWarning("Usuario no encontrado: {email}", login.Email);
 
-            var unauthorized = req.CreateResponse(HttpStatusCode.Unauthorized);
-            await unauthorized.WriteStringAsync("Invalid credentials");
-            return unauthorized;
+            return await JsonResponse
+                .Create(req, HttpStatusCode.NotFound, "User not found");
         }
 
         var valid = PasswordHasher.Verify(
@@ -85,9 +83,8 @@ public class ValidateUserFunction
         {
             _logger.LogWarning("Contraseña inválida para {email}", login.Email);
 
-            var unauthorized = req.CreateResponse(HttpStatusCode.Unauthorized);
-            await unauthorized.WriteStringAsync("Invalid credentials");
-            return unauthorized;
+            return await JsonResponse
+                .Create(req, HttpStatusCode.NotFound, "User not found");
         }
 
         var token = _jwt.GenerateToken(
@@ -95,17 +92,17 @@ public class ValidateUserFunction
             email: login.Email
         );
 
-        var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteAsJsonAsync(new
+        var response = new
         {
             access_token = token,
             expires_in_minutes = int.Parse(
                 req.FunctionContext
                    .InstanceServices
                    .GetRequiredService<IConfiguration>()["Jwt:ExpiresMinutes"]!)
-        });
+        };
 
-        return response;
+        return await JsonResponse
+                .Create(req, HttpStatusCode.OK, response);
     }
 }
 

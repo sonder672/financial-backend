@@ -3,6 +3,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Web;
 using FinancialApp.Backend.Models;
+using FinancialApp.Backend.Util;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -35,17 +36,14 @@ public class GetMovementsByMonthFunction
         {
             _logger.LogWarning("Mes inválido, debe estar entre 1-12: {Month}", monthRaw);
 
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("month must be a number between 1 and 12");
-            return bad;
+            return await JsonResponse
+                .Create(req, HttpStatusCode.BadRequest, "month must be a number between 1 and 12");
         }
 
         var principal = (ClaimsPrincipal)context.Items["User"]!;
         var userId = principal.FindFirst(JwtRegisteredClaimNames.Sub)!.Value;
 
-        _logger.LogInformation(
-            "Consultando movimientos de userId {UserId} and month {Month}",
-            userId, month);
+        _logger.LogInformation("Consultando movimientos de userId {UserId} and month {Month}", userId, month);
 
         var queryDefinition = new QueryDefinition(
             "SELECT * FROM c WHERE c.userId = @userId AND MONTH(c.date) = @month")
@@ -61,8 +59,7 @@ public class GetMovementsByMonthFunction
             results.AddRange(response);
         }
 
-        var ok = req.CreateResponse(HttpStatusCode.OK);
-        await ok.WriteAsJsonAsync(results);
-        return ok;
+        return await JsonResponse
+            .Create(req, HttpStatusCode.OK, results);
     }
 }

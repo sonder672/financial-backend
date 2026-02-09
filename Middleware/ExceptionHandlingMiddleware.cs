@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using FinancialApp.Backend.Security;
+using FinancialApp.Backend.Util;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
@@ -32,6 +33,7 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
         try
         {
             var req = await context.GetHttpRequestDataAsync();
+            
             if (req is null)
             {
                 await next(context);
@@ -89,8 +91,8 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
         req ??= await context.GetHttpRequestDataAsync();
         if (req is null) return;
 
-        var res = req.CreateResponse(HttpStatusCode.Unauthorized);
-        await res.WriteStringAsync(message);
+        HttpResponseData res = await JsonResponse
+            .Create(req, HttpStatusCode.Unauthorized, message);
 
         context.GetInvocationResult().Value = res;
     }
@@ -100,8 +102,8 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
         var req = await context.GetHttpRequestDataAsync();
         if (req is null) return;
 
-        var res = req.CreateResponse(HttpStatusCode.InternalServerError);
-        await res.WriteStringAsync("Internal server error");
+         HttpResponseData res = await JsonResponse
+            .Create(req, HttpStatusCode.Unauthorized, "Internal server error");
 
         context.GetInvocationResult().Value = res;
     }

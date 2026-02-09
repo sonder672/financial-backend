@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using FinancialApp.Backend.Security;
+using FinancialApp.Backend.Util;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -32,14 +33,14 @@ public class HashPasswordFunction
 
         var (hash, salt) = PasswordHasher.Hash(password);
 
-        var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteAsJsonAsync(new
+        var response = new
         {
             passwordHash = hash,
             passwordSalt = salt,
             algorithm = "PBKDF2-SHA256"
-        });
+        };
 
-        return response;
+        return await JsonResponse
+            .Create(req, HttpStatusCode.OK, response);
     }
 }

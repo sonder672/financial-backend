@@ -3,6 +3,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
 using FinancialApp.Backend.Models;
+using FinancialApp.Backend.Util;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -42,20 +43,18 @@ public class CreateMovementFunction
         }
         catch (JsonException ex)
         {
-            _logger.LogWarning(ex, "Datos del Movimiento erróneos");
+            _logger.LogWarning(ex, "Datos del Movimiento erróneos. Probablemente se envió en formato incorrecto o faltan parámetros.");
 
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Invalid JSON body");
-            return bad;
+            return await JsonResponse
+                .Create(req, HttpStatusCode.BadRequest, "Invalid JSON body");
         }
 
         if (movement is null)
         {
-            _logger.LogWarning("Movement body is null");
+            _logger.LogWarning("Faltan parámetros para crear el movimiento {body}", req.Body);
 
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Movement data is required");
-            return bad;
+            return await JsonResponse
+                .Create(req, HttpStatusCode.BadRequest, "Movement data is required");
         }
 
         var principal = (ClaimsPrincipal)context.Items["User"]!;
@@ -64,7 +63,7 @@ public class CreateMovementFunction
             movement.UserId = userId;
 
         movement.Date = movement.Date == default 
-            ? DateTime.UtcNow 
+            ? ColombianDate.Today()
             : movement.Date;
 
         try
@@ -77,13 +76,11 @@ public class CreateMovementFunction
         {
             _logger.LogError(ex, "Cosmos DB error durante la creación del movimiento");
 
-            var error = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await error.WriteStringAsync("Error saving movement");
-            return error;
+            return await JsonResponse
+                .Create(req, HttpStatusCode.InternalServerError, "Error saving movement");
         }
 
-        var response = req.CreateResponse(HttpStatusCode.Created);
-        await response.WriteAsJsonAsync(movement);
-        return response;
+        return await JsonResponse
+                .Create(req, HttpStatusCode.Created, movement);
     }
 }

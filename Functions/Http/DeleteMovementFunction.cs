@@ -2,6 +2,7 @@
 using System.Net;
 using System.Security.Claims;
 using FinancialApp.Backend.Models;
+using FinancialApp.Backend.Util;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -26,8 +27,6 @@ public class DeleteMovementFunction
     public async Task<HttpResponseData> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "delete")] HttpRequestData req, FunctionContext context)
     {
-        _logger.LogInformation("DeleteMovement triggered");
-
         var query = System.Web.HttpUtility.ParseQueryString(req.Url.Query);
         var id = query["id"];
 
@@ -35,9 +34,8 @@ public class DeleteMovementFunction
         {
             _logger.LogWarning("Faltan parámetros para eliminar el movimiento. id: {Id}", id);
 
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("id and userId are required");
-            return bad;
+            return await JsonResponse
+                .Create(req, HttpStatusCode.BadRequest, "id and userId are required");
         }
 
         var principal = (ClaimsPrincipal)context.Items["User"]!;
@@ -47,13 +45,9 @@ public class DeleteMovementFunction
             id,
             new PartitionKey(userId));
 
-        _logger.LogInformation(
-            "Movement deleted successfully. id: {Id}, userId: {UserId}",
-            id,
-            userId);
+        _logger.LogInformation("Movement deleted successfully. id: {Id}, userId: {UserId}", id, userId);
 
-        var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteStringAsync("Movement deleted");
-        return response;
+        return await JsonResponse
+                .Create(req, HttpStatusCode.OK, "Movement deleted");
     }
 }
