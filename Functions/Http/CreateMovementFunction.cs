@@ -60,11 +60,9 @@ public class CreateMovementFunction
                 .Create(req, HttpStatusCode.BadRequest, "Movement data is required");
         }
 
-        var principal = (ClaimsPrincipal)context.Items["User"]!;
-        var userId = principal.FindFirst(JwtRegisteredClaimNames.Sub)!.Value;
+        var userId = context.Items["UserId"] as string;
 
-            movement.UserId = userId;
-
+        movement.UserId = userId!;
         movement.Date = movement.Date == default 
             ? ColombianDate.Today()
             : movement.Date;

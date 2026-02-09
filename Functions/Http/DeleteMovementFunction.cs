@@ -38,8 +38,7 @@ public class DeleteMovementFunction
                 .Create(req, HttpStatusCode.BadRequest, "id and userId are required");
         }
 
-        var principal = (ClaimsPrincipal)context.Items["User"]!;
-        var userId = principal.FindFirst(JwtRegisteredClaimNames.Sub)!.Value;
+        var userId = context.Items["UserId"] as string;
 
         await _container.DeleteItemAsync<Movement>(
             id,

@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Net;
+using System.Security.Claims;
 using FinancialApp.Backend.Security;
 using FinancialApp.Backend.Util;
 using Microsoft.Azure.Functions.Worker;
@@ -11,20 +13,15 @@ namespace FinancialApp.Backend.Middleware;
 
 public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
 {
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
     private readonly JwtHelper _jwt;
-
     private static readonly HashSet<string> PublicFunctions =
     [
         "HashPassword",
         "ValidateUser"
     ];
 
-    public ExceptionHandlingMiddleware(
-        ILogger<ExceptionHandlingMiddleware> logger,
-        JwtHelper jwt)
+    public ExceptionHandlingMiddleware(JwtHelper jwt)
     {
-        _logger = logger;
         _jwt = jwt;
     }
 
@@ -50,7 +47,7 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
 
             if (!req.Headers.TryGetValues("Authorization", out var values))
             {
-                _logger.LogWarning("Petición entrante sin token");
+                context.GetLogger("ExceptionHandlingMiddleware").LogWarning("Petición entrante sin token");
                 await WriteUnauthorized(context, req, "Missing Authorization header");
                 return;
             }
@@ -58,7 +55,7 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
             var header = values.FirstOrDefault();
             if (header is null || !header.StartsWith("Bearer "))
             {
-                _logger.LogWarning("Petición entrante sin token");
+                context.GetLogger("ExceptionHandlingMiddleware").LogWarning("Petición entrante sin token");
                 await WriteUnauthorized(context, req, "Invalid Authorization header");
                 return;
             }
@@ -66,19 +63,28 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
             var token = header["Bearer ".Length..];
 
             var principal = _jwt.Validate(token);
+            string? userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                context.GetLogger("ExceptionHandlingMiddleware").LogWarning("Claim userId vacío: {jwt}", token);
+                await WriteError(context);
 
-            context.Items["User"] = principal;
+                return;
+            }
+
+            context.Items["UserId"] = userId;
 
             await next(context);
         }
         catch (SecurityTokenException ex)
         {
-            _logger.LogWarning(ex, "Invalid or expired JWT");
+            context.GetLogger("ExceptionHandlingMiddleware").LogWarning(ex, "JWT inválido o expirado");
             await WriteUnauthorized(context, null, "Invalid or expired token");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception");
+            context.GetLogger("ExceptionHandlingMiddleware").LogWarning(ex, "Excepción genérica");
             await WriteError(context);
         }
     }

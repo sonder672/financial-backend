@@ -55,6 +55,8 @@ public class Movement
     }
 
     public string Description { get; set; } = string.Empty;
+    
+    [JsonProperty("date")]
     public DateTime Date { get; set; } = DateTime.UtcNow;
 
     private static readonly HashSet<string> ValidCategories =
