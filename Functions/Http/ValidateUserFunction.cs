@@ -40,8 +40,9 @@ public class ValidateUserFunction
             var body = await new StreamReader(req.Body).ReadToEndAsync();
             login = JsonSerializer.Deserialize<LoginRequest>(body, JsonOptions);
         }
-        catch (JsonException)
+        catch (JsonException exception)
         {
+            _logger.LogError(exception, $"Ocurrió un error deserializando la entrada: {exception.Message}");
             var bad = req.CreateResponse(HttpStatusCode.BadRequest);
             await bad.WriteStringAsync("Invalid JSON");
 

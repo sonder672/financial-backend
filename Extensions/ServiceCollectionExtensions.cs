@@ -11,16 +11,16 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<JwtHelper>();
         services.AddSingleton<PasswordHasher>();
-        services.AddSingleton((s) =>
+        services.AddSingleton((service) =>
         {
-            var configuration = s.GetRequiredService<IConfiguration>();
+            var configuration = service.GetRequiredService<IConfiguration>();
             string? cosmosDbConnection = configuration["CosmosDbConnection"];
 
             if (string.IsNullOrWhiteSpace(cosmosDbConnection))
             {
                 throw new ArgumentNullException(cosmosDbConnection, $"Cadena de conexión vacía");
             }
-            
+
             return new CosmosClient(cosmosDbConnection);
         });
         
