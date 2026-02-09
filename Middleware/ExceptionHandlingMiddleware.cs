@@ -78,7 +78,7 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Unhandled exception: {ex.Message}");
+            _logger.LogError(ex, "Unhandled exception");
             await WriteError(context);
         }
     }
