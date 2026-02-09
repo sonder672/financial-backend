@@ -44,9 +44,8 @@ public class HashPasswordFunction
         {
             _logger.LogWarning("No se envió contraseña para emitir hash");
 
-            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-            await bad.WriteStringAsync("Password is required");
-            return bad;
+            return await JsonResponse
+                .Create(req, HttpStatusCode.BadRequest, "Password is required");
         }
 
         var (hash, salt) = PasswordHasher.Hash(password);
