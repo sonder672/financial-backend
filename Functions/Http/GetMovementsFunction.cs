@@ -44,7 +44,8 @@ public class GetMovementsFunction
             "SELECT * FROM c " +
             "WHERE c.userId = @userId " +
             "AND YEAR(c.date) = @year " +
-            "AND MONTH(c.date) = @month");
+            "AND MONTH(c.date) = @month " +
+            "ORDER BY c.date DESC");
 
         var queryDefinition = new QueryDefinition(sql.ToString())
             .WithParameter("@userId", userId)
