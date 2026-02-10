@@ -35,7 +35,7 @@ public class DeleteMovementFunction
             _logger.LogWarning("Faltan parámetros para eliminar el movimiento. id: {Id}", id);
 
             return await JsonResponse
-                .Create(req, HttpStatusCode.BadRequest, "id and userId are required");
+                .Create(req, HttpStatusCode.BadRequest, "No se envió el identificador del movimiento");
         }
 
         var userId = context.Items["UserId"] as string;
@@ -44,9 +44,9 @@ public class DeleteMovementFunction
             id,
             new PartitionKey(userId));
 
-        _logger.LogInformation("Movement deleted successfully. id: {Id}, userId: {UserId}", id, userId);
+        _logger.LogInformation("Movimiento eliminado correctamente. id: {Id}, userId: {UserId}", id, userId);
 
         return await JsonResponse
-                .Create(req, HttpStatusCode.OK, "Movement deleted");
+                .Create(req, HttpStatusCode.OK, "Movimiento eliminado correctamente");
     }
 }

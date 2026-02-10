@@ -48,7 +48,7 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
             if (!req.Headers.TryGetValues("Authorization", out var values))
             {
                 context.GetLogger("ExceptionHandlingMiddleware").LogWarning("Petición entrante sin token");
-                await WriteUnauthorized(context, req, "Missing Authorization header");
+                await WriteUnauthorized(context, req, "Falta el header Authorization");
                 return;
             }
 
@@ -56,7 +56,7 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
             if (header is null || !header.StartsWith("Bearer "))
             {
                 context.GetLogger("ExceptionHandlingMiddleware").LogWarning("Petición entrante sin token");
-                await WriteUnauthorized(context, req, "Invalid Authorization header");
+                await WriteUnauthorized(context, req, "Header Authorization inválido");
                 return;
             }
 
@@ -80,7 +80,7 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
         catch (SecurityTokenException ex)
         {
             context.GetLogger("ExceptionHandlingMiddleware").LogWarning(ex, "JWT inválido o expirado");
-            await WriteUnauthorized(context, null, "Invalid or expired token");
+            await WriteUnauthorized(context, null, "Token inválido o expirado");
         }
         catch (Exception ex)
         {
@@ -109,7 +109,7 @@ public class ExceptionHandlingMiddleware : IFunctionsWorkerMiddleware
         if (req is null) return;
 
          HttpResponseData res = await JsonResponse
-            .Create(req, HttpStatusCode.InternalServerError, "Internal server error");
+            .Create(req, HttpStatusCode.InternalServerError, "Ocurrió un error en el servidor. Intente más tarde.");
 
         context.GetInvocationResult().Value = res;
     }

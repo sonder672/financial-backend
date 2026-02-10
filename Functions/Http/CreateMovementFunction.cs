@@ -49,7 +49,7 @@ public class CreateMovementFunction
             _logger.LogWarning(ex, "Datos del Movimiento erróneos. Probablemente se envió en formato incorrecto o faltan parámetros.");
 
             return await JsonResponse
-                .Create(req, HttpStatusCode.BadRequest, "Invalid JSON body");
+                .Create(req, HttpStatusCode.BadRequest, "Cuerpo JSON inválido");
         }
 
         if (movement is null)
@@ -57,7 +57,7 @@ public class CreateMovementFunction
             _logger.LogWarning("Faltan parámetros para crear el movimiento {body}", req.Body);
 
             return await JsonResponse
-                .Create(req, HttpStatusCode.BadRequest, "Movement data is required");
+                .Create(req, HttpStatusCode.BadRequest, "Los datos del movimiento son obligatorios");
         }
 
         var userId = context.Items["UserId"] as string;
@@ -78,10 +78,10 @@ public class CreateMovementFunction
             _logger.LogError(ex, "Cosmos DB error durante la creación del movimiento");
 
             return await JsonResponse
-                .Create(req, HttpStatusCode.InternalServerError, "Error saving movement");
+                .Create(req, HttpStatusCode.InternalServerError, "Ocurrió un error guardando el movimiento");
         }
 
         return await JsonResponse
-                .Create(req, HttpStatusCode.Created, movement);
+            .Create(req, HttpStatusCode.Created, movement);
     }
 }

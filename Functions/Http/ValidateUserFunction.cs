@@ -50,7 +50,7 @@ public class ValidateUserFunction
             _logger.LogError(exception, "Datos del Movimiento erróneos. Probablemente se envió en formato incorrecto o faltan parámetros.");
 
             return await JsonResponse
-                .Create(req, HttpStatusCode.BadRequest, "Invalid JSON body");
+                .Create(req, HttpStatusCode.BadRequest, "Cuerpo JSON inválido");
         }
 
         if (login is null ||
@@ -58,7 +58,7 @@ public class ValidateUserFunction
             string.IsNullOrWhiteSpace(login.Password))
         {
             return await JsonResponse
-                .Create(req, HttpStatusCode.BadRequest, "Email and password are required");
+                .Create(req, HttpStatusCode.BadRequest, "Usuario y contraseña obligatorios");
         }
 
         Models.User? user;
@@ -74,27 +74,25 @@ public class ValidateUserFunction
             _logger.LogWarning("Usuario no encontrado: {email}", login.Email);
 
             return await JsonResponse
-                .Create(req, HttpStatusCode.NotFound, "User not found");
+                .Create(req, HttpStatusCode.NotFound, "Usuario no encontrado");
         }
 
         var valid = PasswordHasher.Verify(
             login.Password,
             user.PasswordHash,
-            user.PasswordSalt
-        );
+            user.PasswordSalt);
 
         if (!valid)
         {
             _logger.LogWarning("Contraseña inválida para {email}", login.Email);
 
             return await JsonResponse
-                .Create(req, HttpStatusCode.NotFound, "User not found");
+                .Create(req, HttpStatusCode.NotFound, "Usuario no encontrado");
         }
 
         var token = _jwt.GenerateToken(
             userId: user.Id,
-            email: login.Email
-        );
+            email: login.Email);
 
         var response = new
         {
